@@ -1,0 +1,28 @@
+server:
+  port: 80
+
+springdoc:
+  swagger-ui:
+    path: /docs/
+
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+  datasource:
+    platform: postgres
+    url: jdbc:postgresql://localhost:5432/notification
+    username: postgres
+    password: 12345
+    driverClassName: org.postgresql.Driver
+
+flyway:
+  user: postgres
+  password: 12345
+  schemas: notification
+
