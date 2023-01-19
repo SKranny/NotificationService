@@ -12,20 +12,13 @@ import java.util.List;
 @Configuration
 public class SwaggerConfig {
     @Bean
-    public OpenAPI customOpenApi() {
+    public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(
                         new Info()
-                                .description("Эндпоинты для notification-service")
-                                .title("SocialWebService - API")
+                                .description("Описание методов для микросервиса post-service")
+                                .title("Api для notifications-service")
                                 .version("1.0.0")
-                                .contact(new Contact().name("@kudamoi")
-                                        .email("lihoy.sasha@gmail.com"))
-                )
-                .servers(List.of(
-                        new Server().url("http://localhost:80")
-                                .description("Notification service")
-                        )
                 );
     }
 }
