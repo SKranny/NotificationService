@@ -146,7 +146,6 @@ public class NotificationProfileService {
 
     public List<NotificationDTO> getAllNotificationsByEmail(String email) {
         PersonDTO personDTO = personService.getPersonDTOByEmail(email);
-        NotificationProfile profile = notificationProfileRepository.findByUserId(personDTO.getId()).get();
         return notificationProfileRepository.findByUserId(personDTO.getId())
                 .map(NotificationProfile::getNotifications)
                 .map(notificationMapper::toListNotificationDTO)

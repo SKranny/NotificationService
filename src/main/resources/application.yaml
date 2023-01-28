@@ -11,7 +11,7 @@ spring:
     password: ${NOTIFICATION_SERVICE_DATABASE_PASSWORD}
   kafka:
     consumer:
-      group-id: notification-id
+      group-id: notification-service-id
     bootstrap-servers: ${KAFKA_HOST:localhost:9092}
 
   jpa:
@@ -24,8 +24,6 @@ spring:
           lob:
             non_contextual_creation: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
-
 
 jwt:
   secret-code: ${SECRET_KEY}
