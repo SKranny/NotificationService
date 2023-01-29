@@ -7,9 +7,9 @@ import notificationService.dto.CreateSettingsRequest;
 import notificationService.dto.UpdateSettingsRequest;
 import notificationService.services.NotificationProfileService;
 import org.springframework.web.bind.annotation.*;
+import security.TokenAuthentication;
 
 import javax.validation.Valid;
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -20,28 +20,28 @@ public class NotificationProfileController {
     private final NotificationProfileService notificationProfileService;
 
     @GetMapping("/settings")
-    public SettingsDTO getSettings(Principal principal) {
-        return notificationProfileService.getSettingsByPersonEmail(principal.getName());
+    public SettingsDTO getSettings(TokenAuthentication authentication) {
+        return notificationProfileService.getSettingsByPersonEmail(authentication.getTokenData().getEmail());
     }
 
     @PutMapping("/settings")
-    public SettingsDTO updateSettings(@Valid @RequestBody UpdateSettingsRequest request, Principal principal) {
-        return notificationProfileService.updateSettings(request, principal.getName());
+    public SettingsDTO updateSettings(@Valid @RequestBody UpdateSettingsRequest request, TokenAuthentication authentication) {
+        return notificationProfileService.updateSettings(request, authentication.getTokenData().getEmail());
     }
 
     @PostMapping("/settings")
-    public SettingsDTO createSettings(@Valid @RequestBody CreateSettingsRequest request, Principal principal) {
-        return notificationProfileService.createSettings(request, principal.getName());
+    public SettingsDTO createSettings(@Valid @RequestBody CreateSettingsRequest request, TokenAuthentication authentication) {
+        return notificationProfileService.createSettings(request, authentication.getTokenData().getEmail());
     }
 
     @GetMapping
-    public List<NotificationDTO> getAllNotifications(Principal principal) {
-        return notificationProfileService.getAllNotificationsByEmail(principal.getName());
+    public List<NotificationDTO> getAllNotifications(TokenAuthentication authentication) {
+        return notificationProfileService.getAllNotificationsByEmail(authentication.getTokenData().getEmail());
     }
 
     @GetMapping("/count")
-    public Integer getNotificationsCount(Principal principal) {
-        return notificationProfileService.getNotificationsCount(principal.getName());
+    public Integer getNotificationsCount(TokenAuthentication authentication) {
+        return notificationProfileService.getNotificationsCount(authentication.getTokenData().getEmail());
     }
 
 }
