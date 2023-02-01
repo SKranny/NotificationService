@@ -1,6 +1,7 @@
 package notificationService.services;
 
 import constants.NotificationType;
+import dto.notification.ContentDTO;
 import kafka.dto.Event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -24,7 +28,14 @@ public class NotificationService {
 
     @KafkaListener(topics = "Notification")
     public void createNotification(Event<CreateNotificationRequest> event) {
-        log.info(String.format("%s [%s] request new notification with %d attach file - %s", event.getServiceName(), event.getTime(), event.getContent().getContent().getAttaches().size(), event.getContent().getContent().getText()));
+        log.info(String.format("%s [%s] request new notification with %d attach file - %s",
+                event.getServiceName(),
+                event.getTime(),
+                Optional.ofNullable(event.getContent().getContent())
+                        .map(ContentDTO::getAttaches)
+                        .map(List::size).orElse(0),
+                event.getContent().getContent().getText())
+        );
         createNotification(event.getContent());
     }
 
