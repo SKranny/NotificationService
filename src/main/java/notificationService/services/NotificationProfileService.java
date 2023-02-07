@@ -4,7 +4,7 @@ import dto.notification.NotificationDTO;
 import dto.notification.SettingsDTO;
 import dto.userDto.PersonDTO;
 import lombok.RequiredArgsConstructor;
-import notificationService.dto.CreateSettingsRequest;
+import lombok.extern.slf4j.Slf4j;
 import notificationService.dto.SettingsFilter;
 import notificationService.dto.UpdateSettingsRequest;
 import notificationService.entities.Notification;
@@ -16,11 +16,15 @@ import notificationService.mapper.SettingsMapper;
 import notificationService.repository.NotificationProfileRepository;
 import notificationService.repository.settings.SettingsRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.Optional;
 
+import javax.transaction.Transactional;
+import java.util.List;
+
+@Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class NotificationProfileService {
     private final NotificationProfileRepository notificationProfileRepository;
@@ -99,11 +103,12 @@ public class NotificationProfileService {
         }
     }
 
-    public SettingsDTO createSettings(CreateSettingsRequest request, String email) {
-        PersonDTO personDTO = personService.getPersonDTOByEmail(email);
-        NotificationProfile notificationProfile = findOrBuildNotificationProfile(personDTO.getId());
-        notificationProfile.setSettings(getOrBuildSettings(buildSettingsFilterFromRequest(request)));
-        return settingsMapper.toSettingsDTO(notificationProfileRepository.save(notificationProfile).getSettings());
+    @KafkaListener(topics = "NewCustomer")
+    public SettingsDTO createSettings(PersonDTO personDTOEvent) {
+        NotificationProfile notificationProfile = findOrBuildNotificationProfile(personDTOEvent.getId());
+        notificationProfile.setSettings(getOrBuildSettings(new SettingsFilter()));
+        notificationProfileRepository.save(notificationProfile);
+        return settingsMapper.toSettingsDTO(notificationProfile.getSettings());
     }
 
     private Settings getOrBuildSettings(SettingsFilter request) {
@@ -116,19 +121,6 @@ public class NotificationProfileService {
                 .orElseGet(() -> NotificationProfile.builder()
                         .userId(userId)
                         .build());
-    }
-
-    private SettingsFilter buildSettingsFilterFromRequest(CreateSettingsRequest request) {
-        return SettingsFilter.builder()
-                .post(Optional.ofNullable(request.getPost()).orElse(false))
-                .friendRequest(Optional.ofNullable(request.getFriendRequest()).orElse(false))
-                .friendBirthday(Optional.ofNullable(request.getFriendBirthday()).orElse(false))
-                .sendEmailMessage(Optional.ofNullable(request.getSendEmailMessage()).orElse(false))
-                .message(Optional.ofNullable(request.getMessage()).orElse(false))
-                .sendPhoneMessage(Optional.ofNullable(request.getSendPhoneMessage()).orElse(false))
-                .postComment(Optional.ofNullable(request.getPostComment()).orElse(false))
-                .commentComment(Optional.ofNullable(request.getCommentComment()).orElse(false))
-                .build();
     }
 
     private Settings buildSettingsFromFilter(SettingsFilter filter) {

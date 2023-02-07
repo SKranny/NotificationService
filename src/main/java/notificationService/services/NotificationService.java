@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,16 +29,15 @@ public class NotificationService {
     private final ContentMapper contentMapper;
 
     @KafkaListener(topics = "Notification")
-    public void createNotification(Event<CreateNotificationRequest> event) {
-        log.info(String.format("%s [%s] request new notification with %d attach file - %s",
-                event.getServiceName(),
-                event.getTime(),
-                Optional.ofNullable(event.getContent().getContent())
+    public void listenerNewNotifications(CreateNotificationRequest request) {
+        log.info(String.format("[%s] processed new notification with %d attach file - %s",
+                LocalDateTime.now(),
+                Optional.ofNullable(request.getContent())
                         .map(ContentDTO::getAttaches)
                         .map(List::size).orElse(0),
-                event.getContent().getContent().getText())
+                request)
         );
-        createNotification(event.getContent());
+        createNotification(request);
     }
 
     private boolean getSettingByNotificationType(Settings settings, NotificationType type) {

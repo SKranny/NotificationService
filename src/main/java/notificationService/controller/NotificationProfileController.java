@@ -3,7 +3,6 @@ package notificationService.controller;
 import dto.notification.NotificationDTO;
 import dto.notification.SettingsDTO;
 import lombok.RequiredArgsConstructor;
-import notificationService.dto.CreateSettingsRequest;
 import notificationService.dto.UpdateSettingsRequest;
 import notificationService.services.NotificationProfileService;
 import org.springframework.web.bind.annotation.*;
@@ -27,11 +26,6 @@ public class NotificationProfileController {
     @PutMapping("/settings")
     public SettingsDTO updateSettings(@Valid @RequestBody UpdateSettingsRequest request, TokenAuthentication authentication) {
         return notificationProfileService.updateSettings(request, authentication.getTokenData().getEmail());
-    }
-
-    @PostMapping("/settings")
-    public SettingsDTO createSettings(@Valid @RequestBody CreateSettingsRequest request, TokenAuthentication authentication) {
-        return notificationProfileService.createSettings(request, authentication.getTokenData().getEmail());
     }
 
     @GetMapping
