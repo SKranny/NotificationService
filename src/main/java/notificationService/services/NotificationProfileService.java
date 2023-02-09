@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -153,6 +154,12 @@ public class NotificationProfileService {
         return notificationProfileRepository.findByUserId(recipientId)
                 .orElseThrow(() -> new NotificationException("Error! Recipient not found!", HttpStatus.BAD_REQUEST));
     }
+
+    public List<NotificationProfile> findNotificationProfilesByRecipientIdList(List<Long> recipientIdList) {
+        return notificationProfileRepository.findByUserIdList(recipientIdList)
+                .orElseThrow(() -> new NotificationException("Error! Recipient not found!", HttpStatus.BAD_REQUEST));
+    }
+
 
     public void addNewNotification(Long userId, Notification notification) {
         NotificationProfile profile = findNotificationProfileByRecipientId(userId);

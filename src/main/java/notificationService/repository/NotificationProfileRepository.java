@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface NotificationProfileRepository extends JpaRepository<NotificationProfile, Long> {
     Optional<NotificationProfile> findByUserId(Long userId);
 
+    Optional<List<NotificationProfile>> findByUserIdIn(List<Long> idList);
+
     default Integer countNotificationsByUserId(Long userId) {
         return findByUserId(userId)
                 .map(NotificationProfile::getNotifications)

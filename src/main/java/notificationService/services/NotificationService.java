@@ -1,11 +1,14 @@
 package notificationService.services;
 
 import constants.NotificationType;
+import dto.friendDto.FriendsNotificationRequest;
 import dto.notification.ContentDTO;
+import dto.postDto.PostNotificationRequest;
 import kafka.dto.Event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notificationService.dto.CreateNotificationRequest;
+import notificationService.dto.RequestForLogger;
 import notificationService.entities.Notification;
 import notificationService.entities.NotificationProfile;
 import notificationService.entities.Settings;
@@ -19,6 +22,7 @@ import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -30,6 +34,23 @@ public class NotificationService {
 
     @KafkaListener(topics = "Notification")
     public void listenerNewNotifications(CreateNotificationRequest request) {
+        kafkaLogger(RequestForLogger.builder()
+                .requestName("Notification")
+                .content(request.getContent())
+                .build());
+        createNotification(request);
+    }
+
+    @KafkaListener(topics = "Friends")
+    public void listenerNewNotifications(FriendsNotificationRequest request) {
+        kafkaLogger(RequestForLogger.builder()
+                .requestName("Friends")
+                .content(request.getContent())
+                .build());
+        createNotification(request);
+    }
+
+    private void kafkaLogger(RequestForLogger request){
         log.info(String.format("[%s] processed new notification with %d attach file - %s",
                 LocalDateTime.now(),
                 Optional.ofNullable(request.getContent())
@@ -37,8 +58,16 @@ public class NotificationService {
                         .map(List::size).orElse(0),
                 request)
         );
-        createNotification(request);
     }
+
+    /*@KafkaListener(topics = "Post")
+    public void listenerNewNotifications(PostNotificationRequest request) {
+        kafkaLogger(RequestForLogger.builder()
+                .requestName("Post")
+                .content(request.getContent())
+                .build());
+        createNotification(request);
+    }*/
 
     private boolean getSettingByNotificationType(Settings settings, NotificationType type) {
         switch (type) {
@@ -73,6 +102,26 @@ public class NotificationService {
         notificationProfileService.addNewNotification(req.getRecipientId(), buildNotification(req, notificationProfile));
     }
 
+    public void createNotification(FriendsNotificationRequest req) {
+        NotificationProfile notificationProfile = notificationProfileService.findNotificationProfileByRecipientId(req.getRecipientId());
+
+        if (!getSettingByNotificationType(notificationProfile.getSettings(), req.getType())) {
+            throw new NotificationException(String.format("Error! %s not allowed!", req.getType().name()), HttpStatus.BAD_REQUEST);
+        }
+
+        notificationProfileService.addNewNotification(req.getRecipientId(), buildNotification(req, notificationProfile));
+    }
+
+    public void createNotification(PostNotificationRequest req) {
+        List<NotificationProfile> notificationProfileList = notificationProfileService.findNotificationProfilesByRecipientIdList(req.getFriendsId());
+
+        if (!getSettingByNotificationType(notificationProfile.getSettings(), req.getType())) {
+            throw new NotificationException(String.format("Error! %s not allowed!", req.getType().name()), HttpStatus.BAD_REQUEST);
+        }
+        notificationProfileService.addNewNotification(req.getRecipientId(), buildNotification(req, notificationProfile));
+
+    }
+
     private Notification buildNotification(CreateNotificationRequest request, NotificationProfile profile) {
         return Notification.builder()
                 .authorId(request.getAuthorId())
@@ -81,4 +130,33 @@ public class NotificationService {
                 .type(request.getType())
                 .build();
     }
+
+    private Notification buildNotification(FriendsNotificationRequest request, NotificationProfile profile) {
+        return Notification.builder()
+                .authorId(request.getAuthorId())
+                .content(contentMapper.toContent(request.getContent()))
+                .profile(profile)
+                .type(request.getType())
+                .build();
+    }
+
+    private Notification buildNotification(PostNotificationRequest request, NotificationProfile profile) {
+        return Notification.builder()
+                .authorId(request.getAuthorId())
+                .content(contentMapper.toContent(request.getContent()))
+                .profile(profile)
+                .type(request.getType())
+                .build();
+    }
+
+    /*private List<Notification> buildNotification(PostNotificationRequest request, List<NotificationProfile> profileList) {
+        return profileList.stream()
+                .map(profile -> Notification.builder()
+                        .authorId(request.getAuthorId())
+                        .content(contentMapper.toContent(request.getContent()))
+                        .profile(profile)
+                        .type(request.getType())
+                        .build())
+                .collect(Collectors.toList());
+    }*/
 }
