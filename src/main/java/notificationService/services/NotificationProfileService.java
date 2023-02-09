@@ -156,7 +156,7 @@ public class NotificationProfileService {
     }
 
     public List<NotificationProfile> findNotificationProfilesByRecipientIdList(List<Long> recipientIdList) {
-        return notificationProfileRepository.findByUserIdList(recipientIdList)
+        return notificationProfileRepository.findByUserIdIn(recipientIdList)
                 .orElseThrow(() -> new NotificationException("Error! Recipient not found!", HttpStatus.BAD_REQUEST));
     }
 
@@ -165,5 +165,13 @@ public class NotificationProfileService {
         NotificationProfile profile = findNotificationProfileByRecipientId(userId);
         profile.getNotifications().add(notification);
         notificationProfileRepository.save(profile);
+    }
+
+    public void addNewNotificationWithList(List<Long> userIdList, Notification notification){
+        List<NotificationProfile> notificationProfileList = userIdList.stream()
+                .map(userId -> findNotificationProfileByRecipientId(userId)).collect(Collectors.toList());
+        notificationProfileList.stream()
+                .map(notificationProfile -> notificationProfile.getNotifications().add(notification));
+        notificationProfileRepository.saveAll(notificationProfileList);
     }
 }

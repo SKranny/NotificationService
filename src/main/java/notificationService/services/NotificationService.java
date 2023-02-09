@@ -60,14 +60,14 @@ public class NotificationService {
         );
     }
 
-    /*@KafkaListener(topics = "Post")
+    @KafkaListener(topics = "Post")
     public void listenerNewNotifications(PostNotificationRequest request) {
         kafkaLogger(RequestForLogger.builder()
                 .requestName("Post")
                 .content(request.getContent())
                 .build());
         createNotification(request);
-    }*/
+    }
 
     private boolean getSettingByNotificationType(Settings settings, NotificationType type) {
         switch (type) {
@@ -114,12 +114,18 @@ public class NotificationService {
 
     public void createNotification(PostNotificationRequest req) {
         List<NotificationProfile> notificationProfileList = notificationProfileService.findNotificationProfilesByRecipientIdList(req.getFriendsId());
+        getSettingsByNotificationTypeFromList(notificationProfileList, req.getType());
+        notificationProfileList.stream()
+                .forEach(notificationProfile -> notificationProfileService
+                        .addNewNotificationWithList(req.getFriendsId(),buildNotification(req,notificationProfile)));
+    }
 
-        if (!getSettingByNotificationType(notificationProfile.getSettings(), req.getType())) {
-            throw new NotificationException(String.format("Error! %s not allowed!", req.getType().name()), HttpStatus.BAD_REQUEST);
+    private void getSettingsByNotificationTypeFromList(List<NotificationProfile> profileList, NotificationType type){
+        for (NotificationProfile profile : profileList){
+           if (!getSettingByNotificationType(profile.getSettings(),type)){
+               throw new NotificationException(String.format("Error! %s not allowed!", type.name()), HttpStatus.BAD_REQUEST);
+           }
         }
-        notificationProfileService.addNewNotification(req.getRecipientId(), buildNotification(req, notificationProfile));
-
     }
 
     private Notification buildNotification(CreateNotificationRequest request, NotificationProfile profile) {
@@ -148,15 +154,4 @@ public class NotificationService {
                 .type(request.getType())
                 .build();
     }
-
-    /*private List<Notification> buildNotification(PostNotificationRequest request, List<NotificationProfile> profileList) {
-        return profileList.stream()
-                .map(profile -> Notification.builder()
-                        .authorId(request.getAuthorId())
-                        .content(contentMapper.toContent(request.getContent()))
-                        .profile(profile)
-                        .type(request.getType())
-                        .build())
-                .collect(Collectors.toList());
-    }*/
 }
