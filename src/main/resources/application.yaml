@@ -24,10 +24,8 @@ spring:
           lob:
             non_contextual_creation: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
 jwt:
   secret-code: ${SECRET_KEY}
-
 eureka:
   instance:
     leaseRenewalIntervalInSeconds: 5
@@ -35,7 +33,6 @@ eureka:
   client:
     serviceUrl:
       defaultZone: ${EUREKA_URI:http://localhost:8081/eureka}
-
 springdoc:
   swagger-ui:
     path: /docs/
