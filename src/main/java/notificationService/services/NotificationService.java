@@ -20,8 +20,10 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -113,14 +115,14 @@ public class NotificationService {
     }
 
     public void createNotification(PostNotificationRequest req) {
-        List<NotificationProfile> notificationProfileList = notificationProfileService.findNotificationProfilesByRecipientIdList(req.getFriendsId());
+        Set<NotificationProfile> notificationProfileList = notificationProfileService.findNotificationProfilesByRecipientIdList(req.getFriendsId());
         getSettingsByNotificationTypeFromList(notificationProfileList, req.getType());
         notificationProfileList.stream()
                 .forEach(notificationProfile -> notificationProfileService
                         .addNewNotificationWithList(req.getFriendsId(),buildNotification(req,notificationProfile)));
     }
 
-    private void getSettingsByNotificationTypeFromList(List<NotificationProfile> profileList, NotificationType type){
+    private void getSettingsByNotificationTypeFromList(Set<NotificationProfile> profileList, NotificationType type){
         for (NotificationProfile profile : profileList){
            if (!getSettingByNotificationType(profile.getSettings(),type)){
                throw new NotificationException(String.format("Error! %s not allowed!", type.name()), HttpStatus.BAD_REQUEST);
