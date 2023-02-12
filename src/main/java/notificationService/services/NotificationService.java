@@ -118,9 +118,7 @@ public class NotificationService {
         Set<NotificationProfile> notificationProfileList = notificationProfileService
                 .findNotificationProfilesByRecipientIdList(req.getFriendsId());
         List<NotificationProfile> profiles = getSettingsByNotificationTypeFromList(notificationProfileList, req.getType());
-        profiles.stream()
-                .forEach(notificationProfile -> notificationProfileService
-                        .addNewNotificationWithList(req.getFriendsId(),buildNotification(req,notificationProfile)));
+        notificationProfileService.addNewNotificationWithList(req.getFriendsId(),buildNotification(req, profiles));
     }
 
     private List<NotificationProfile> getSettingsByNotificationTypeFromList(Set<NotificationProfile> profileList, NotificationType type){
@@ -145,12 +143,13 @@ public class NotificationService {
                 .build();
     }
 
-    private Notification buildNotification(PostNotificationRequest request, NotificationProfile profile) {
-        return Notification.builder()
-                .authorId(request.getAuthorId())
-                .content(contentMapper.toContent(request.getContent()))
-                .profile(profile)
-                .type(request.getType())
-                .build();
+    private List<Notification> buildNotification(PostNotificationRequest request, List<NotificationProfile> profiles) {
+        return profiles.stream().map(profile -> Notification.builder()
+                        .authorId(request.getAuthorId())
+                        .content(contentMapper.toContent(request.getContent()))
+                        .profile(profile)
+                        .type(request.getType())
+                        .build())
+                .collect(Collectors.toList());
     }
 }
