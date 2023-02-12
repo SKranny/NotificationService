@@ -168,9 +168,7 @@ public class NotificationProfileService {
         notificationProfileRepository.save(profile);
     }
 
-    public void addNewNotificationWithList(List<Long> userIdList){
-        List<NotificationProfile> notificationProfileList = userIdList.stream()
-                .map(userId -> findNotificationProfileByRecipientId(userId)).collect(Collectors.toList());
-        notificationProfileRepository.saveAll(notificationProfileList);
+    public void addNewNotificationList(List<NotificationProfile> notificationProfiles){
+        notificationProfileRepository.saveAll(notificationProfiles);
     }
 }

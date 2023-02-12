@@ -119,7 +119,7 @@ public class NotificationService {
                 .findNotificationProfilesByRecipientIdList(req.getFriendsId());
         List<NotificationProfile> profiles = getSettingsByNotificationTypeFromList(notificationProfileList, req.getType());
         profiles.stream().forEach(notificationProfile -> notificationProfile.getNotifications().add(buildNotification(req,notificationProfile)));
-        /*notificationProfileService.addNewNotificationWithList(req.getFriendsId());*/
+        notificationProfileService.addNewNotificationList(profiles);
     }
 
     private List<NotificationProfile> getSettingsByNotificationTypeFromList(Set<NotificationProfile> profileList, NotificationType type){
