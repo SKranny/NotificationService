@@ -115,19 +115,16 @@ public class NotificationService {
     }
 
     public void createNotification(PostNotificationRequest req) {
-        Set<NotificationProfile> notificationProfileList = notificationProfileService.findNotificationProfilesByRecipientIdList(req.getFriendsId());
-        getSettingsByNotificationTypeFromList(notificationProfileList, req.getType());
-        notificationProfileList.stream()
+        Set<NotificationProfile> notificationProfileList = notificationProfileService
+                .findNotificationProfilesByRecipientIdList(req.getFriendsId());
+        List<NotificationProfile> profiles = getSettingsByNotificationTypeFromList(notificationProfileList, req.getType());
+        profiles.stream()
                 .forEach(notificationProfile -> notificationProfileService
                         .addNewNotificationWithList(req.getFriendsId(),buildNotification(req,notificationProfile)));
     }
 
-    private void getSettingsByNotificationTypeFromList(Set<NotificationProfile> profileList, NotificationType type){
-        for (NotificationProfile profile : profileList){
-           if (!getSettingByNotificationType(profile.getSettings(),type)){
-               throw new NotificationException(String.format("Error! %s not allowed!", type.name()), HttpStatus.BAD_REQUEST);
-           }
-        }
+    private List<NotificationProfile> getSettingsByNotificationTypeFromList(Set<NotificationProfile> profileList, NotificationType type){
+        return profileList.stream().filter(profile -> getSettingByNotificationType(profile.getSettings(),type)).collect(Collectors.toList());
     }
 
     private Notification buildNotification(CreateNotificationRequest request, NotificationProfile profile) {
