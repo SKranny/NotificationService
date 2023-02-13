@@ -176,8 +176,4 @@ public class NotificationProfileService {
         profile.getNotifications().add(notification);
         notificationProfileRepository.save(profile);
     }
-
-    public void addNewNotificationList(List<NotificationProfile> notificationProfiles){
-        notificationProfileRepository.saveAll(notificationProfiles);
-    }
 }
