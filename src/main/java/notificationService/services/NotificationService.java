@@ -3,10 +3,11 @@ package notificationService.services;
 import constants.NotificationType;
 import dto.friendDto.FriendsNotificationRequest;
 import dto.notification.ContentDTO;
+import dto.notification.CreateNotificationRequest;
+import dto.notification.NotificationRequest;
 import dto.postDto.PostNotificationRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import notificationService.dto.CreateNotificationRequest;
 import notificationService.dto.RequestForLogger;
 import notificationService.entities.Notification;
 import notificationService.entities.NotificationProfile;
@@ -111,7 +112,7 @@ public class NotificationService {
             throw new NotificationException(String.format("Error! %s not allowed!", req.getType().name()), HttpStatus.BAD_REQUEST);
         }
 
-        notificationRepository.save(buildNotification(req, notificationProfile));
+        notificationRepository.save(buildNotification(req,notificationProfile));
     }
 
     public void createNotification(PostNotificationRequest req) {
@@ -128,25 +129,7 @@ public class NotificationService {
         return profileList.stream().filter(profile -> getSettingByNotificationType(profile.getSettings(),type)).collect(Collectors.toList());
     }
 
-    private Notification buildNotification(CreateNotificationRequest request, NotificationProfile profile) {
-        return Notification.builder()
-                .authorId(request.getAuthorId())
-                .content(contentMapper.toContent(request.getContent()))
-                .profile(profile)
-                .type(request.getType())
-                .build();
-    }
-
-    private Notification buildNotification(FriendsNotificationRequest request, NotificationProfile profile) {
-        return Notification.builder()
-                .authorId(request.getAuthorId())
-                .content(contentMapper.toContent(request.getContent()))
-                .profile(profile)
-                .type(request.getType())
-                .build();
-    }
-
-    private Notification buildNotification(PostNotificationRequest request, NotificationProfile profile) {
+    private Notification buildNotification(NotificationRequest request, NotificationProfile profile) {
         return Notification.builder()
                 .authorId(request.getAuthorId())
                 .content(contentMapper.toContent(request.getContent()))
