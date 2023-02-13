@@ -14,7 +14,7 @@ import java.util.Set;
 public interface NotificationProfileRepository extends JpaRepository<NotificationProfile, Long> {
     Optional<NotificationProfile> findByUserId(Long userId);
 
-    Optional<Set<NotificationProfile>> findByUserIdIn(List<Long> idList);
+    Set<NotificationProfile> findByUserIdIn(List<Long> idList);
 
     default Integer countNotificationsByUserId(Long userId) {
         return findByUserId(userId)

@@ -4,7 +4,6 @@ import constants.NotificationType;
 import dto.friendDto.FriendsNotificationRequest;
 import dto.notification.ContentDTO;
 import dto.postDto.PostNotificationRequest;
-import kafka.dto.Event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notificationService.dto.CreateNotificationRequest;
@@ -14,13 +13,12 @@ import notificationService.entities.NotificationProfile;
 import notificationService.entities.Settings;
 import notificationService.exception.NotificationException;
 import notificationService.mapper.ContentMapper;
+import notificationService.repository.NotificationRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,6 +29,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class NotificationService {
     private final NotificationProfileService notificationProfileService;
+
+    private final NotificationRepository notificationRepository;
 
     private final ContentMapper contentMapper;
 
@@ -101,7 +101,7 @@ public class NotificationService {
             throw new NotificationException(String.format("Error! %s not allowed!", req.getType().name()), HttpStatus.BAD_REQUEST);
         }
 
-        notificationProfileService.addNewNotification(req.getRecipientId(), buildNotification(req, notificationProfile));
+        notificationRepository.save(buildNotification(req, notificationProfile));
     }
 
     public void createNotification(FriendsNotificationRequest req) {
@@ -111,15 +111,17 @@ public class NotificationService {
             throw new NotificationException(String.format("Error! %s not allowed!", req.getType().name()), HttpStatus.BAD_REQUEST);
         }
 
-        notificationProfileService.addNewNotification(req.getRecipientId(), buildNotification(req, notificationProfile));
+        notificationRepository.save(buildNotification(req, notificationProfile));
     }
 
     public void createNotification(PostNotificationRequest req) {
         Set<NotificationProfile> notificationProfileList = notificationProfileService
                 .findNotificationProfilesByRecipientIdList(req.getFriendsId());
         List<NotificationProfile> profiles = getSettingsByNotificationTypeFromList(notificationProfileList, req.getType());
-        profiles.stream().forEach(notificationProfile -> notificationProfile.getNotifications().add(buildNotification(req,notificationProfile)));
-        notificationProfileService.addNewNotificationList(profiles);
+        List<Notification> notifications = profiles.stream()
+                .map(profile -> buildNotification(req, profile))
+                .collect(Collectors.toList());
+        notificationRepository.saveAll(notifications);
     }
 
     private List<NotificationProfile> getSettingsByNotificationTypeFromList(Set<NotificationProfile> profileList, NotificationType type){
