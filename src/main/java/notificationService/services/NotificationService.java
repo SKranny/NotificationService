@@ -2,7 +2,6 @@ package notificationService.services;
 
 import constants.NotificationType;
 import dto.notification.ContentDTO;
-import kafka.dto.Event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notificationService.dto.CreateNotificationRequest;
