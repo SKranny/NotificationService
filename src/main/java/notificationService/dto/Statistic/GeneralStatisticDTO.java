@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class GeneralStatisticDTO {
-    private Long userCount;
-    private Long postCount;
+    private UserStatisticDTO userStatistic;
+    private PostStatisticDTO postStatistic;
     private Long commentsCount;
     private Long likesCount;
 

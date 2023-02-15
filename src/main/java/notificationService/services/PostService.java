@@ -8,6 +8,6 @@ import java.util.List;
 
 @FeignClient("post-service/api/v1/post")
 public interface PostService {
-    @GetMapping
+    @GetMapping("/all")
     List<PostDTO> getAllPosts();
 }
