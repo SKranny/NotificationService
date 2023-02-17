@@ -15,12 +15,11 @@ public interface PersonService {
 
     @Operation(summary = "Получить всех пользователей")
     @GetMapping("/find")
-    public List<PersonDTO> findPersonsByFriend();
+    public List<PersonDTO> getAllPersonsDTO();
 
     @Operation(summary = "Получить всех активных пользователей")
     @GetMapping("/active")
     public List<PersonDTO> getAllActivePersons();
-
 
     @Operation(summary = "Получить всех заблокированных пользователей")
     @GetMapping("/blocked")
