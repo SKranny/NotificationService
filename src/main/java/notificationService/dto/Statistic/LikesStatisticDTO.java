@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LikesStatisticDTO {
-    private Long likesCount;
+    private Long generalLikesCount;
 }

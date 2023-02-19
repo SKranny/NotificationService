@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class GeneralStatisticDTO {
     private UserStatisticDTO userStatistic;
     private PostStatisticDTO postStatistic;
-    private Long commentsCount;
-    private Long likesCount;
+    /*private Long commentsCount;
+    private Long likesCount;*/
 
 }
