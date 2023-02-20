@@ -7,7 +7,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
 @Configuration
 public class SecurityConfig {
-
     @Bean
     @Primary
     public HttpSecurity httpSecurity(HttpSecurity httpSecurity) throws Exception {
