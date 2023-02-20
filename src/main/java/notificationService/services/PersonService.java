@@ -1,6 +1,7 @@
 package notificationService.services;
 
 import dto.userDto.PersonDTO;
+import notificationService.dto.Statistic.constant.BetweenDataRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,6 @@ public interface PersonService {
     @GetMapping
     List<PersonDTO> getAllPersonsDTO();
 
-    @GetMapping
-    List<PersonDTO> getAllPersonsDTOByTimeBetween(LocalDate date1, LocalDate date2);
+    @GetMapping("/allBetween")
+    List<PersonDTO> getAllPersonsDTOByTimeBetween(@RequestParam BetweenDataRequest request);
 }

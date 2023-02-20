@@ -12,6 +12,7 @@ import notificationService.services.StatisticService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/api/v1/notifications/statistic")
 @RequiredArgsConstructor
 public class StatisticController {
 

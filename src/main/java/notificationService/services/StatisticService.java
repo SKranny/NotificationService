@@ -1,20 +1,20 @@
 package notificationService.services;
 
+import dto.userDto.PersonDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notificationService.dto.Statistic.GeneralStatisticDTO;
 import notificationService.dto.Statistic.PostStatisticDTO;
 import notificationService.dto.Statistic.StatisticRequest;
 import notificationService.dto.Statistic.UserStatisticDTO;
+import notificationService.dto.Statistic.constant.BetweenDataRequest;
 import notificationService.dto.Statistic.constant.ChartRangeType;
+import notificationService.exception.StatisticException;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
 import java.time.temporal.WeekFields;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,7 +59,7 @@ public class StatisticService {
             case ALL_TIME:
                 return buildPostStatsByAllTime();
             default:
-                return null;
+                throw new StatisticException("Error! Unknown chart type!");
         }
     }
 
@@ -68,18 +68,45 @@ public class StatisticService {
             case MONTH:
                 return buildUserStatsByMonth();
             case WEEK:
-                return null;
+                return buildUserStatsByWeek();
             case ALL_TIME:
                 return buildUserStatsByAllTime();
             default:
-                return null;
+                throw new StatisticException("Error! Unknown chart type!");
         }
+    }
+
+    private UserStatisticDTO buildUserStatsByWeek() {
+        UserStatisticDTO userStat = UserStatisticDTO.builder()
+                .generalUserCount((long)personService.getAllPersonsDTO().size())
+                .period(personService
+                        .getAllPersonsDTOByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfMonth(LocalDate.now().getMonth().name()))
+                                .date2(LocalDate.now())
+                                .build())
+                        .stream()
+                        .map(personDTO -> String.valueOf(personDTO.getCreatedOn()
+                                .toLocalDate().get(WeekFields.of(Locale.getDefault()).weekOfYear())))
+                        .collect(Collectors.toSet()))
+                .usersCountByPeriod(new HashMap<>())
+                .build();
+        userStat.getPeriod().stream()
+                .map(weekNumber -> userStat.getUsersCountByPeriod().put(weekNumber + " week", (long)personService
+                        .getAllPersonsDTOByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfWeek(weekNumber))
+                                .date2(getLastDayOfWeek(weekNumber))
+                                .build())
+                        .size()));
+        return userStat;
     }
 
     private UserStatisticDTO buildUserStatsByMonth(){
         UserStatisticDTO userStat = UserStatisticDTO.builder()
                 .generalUserCount((long)personService.getAllPersonsDTO().size())
-                .period(personService.getAllPersonsDTOByTimeBetween(LocalDate.now(), LocalDate.ofYearDay(LocalDate.now().getYear(),1))
+                .period(personService.getAllPersonsDTOByTimeBetween(BetweenDataRequest.builder()
+                        .date1(LocalDate.now())
+                        .date2(LocalDate.ofYearDay(LocalDate.now().getYear(),1))
+                        .build())
                         .stream()
                         .map(personDTO -> personDTO.getCreatedOn().getMonth().name())
                         .collect(Collectors.toSet()))
@@ -87,7 +114,10 @@ public class StatisticService {
                 .build();
         userStat.getPeriod().stream()
                 .map(month -> userStat.getUsersCountByPeriod().put(month, (long)personService
-                        .getAllPersonsDTOByTimeBetween(getFirstDayOfMonth(month), getLastDayOfMonth(month))
+                        .getAllPersonsDTOByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfMonth(month))
+                                .date2(getLastDayOfMonth(month))
+                                .build())
                         .size()));
         return userStat;
     }
@@ -103,7 +133,10 @@ public class StatisticService {
                 .build();
         userStat.getPeriod().stream()
                 .map(year -> userStat.getUsersCountByPeriod().put(year, (long)personService
-                        .getAllPersonsDTOByTimeBetween(getFirstDayOfYear(year),getLastDayOfYear(year))
+                        .getAllPersonsDTOByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfYear(year))
+                                .date2(getLastDayOfYear(year))
+                                .build())
                         .size()));
         return userStat;
     }
@@ -111,7 +144,9 @@ public class StatisticService {
     private PostStatisticDTO buildPostStatsByMonth(){
         PostStatisticDTO postStat = PostStatisticDTO.builder()
                 .generalPostCount((long)postService.getAllPosts().size())
-                .period(postService.getAllPostsByTimeBetween(LocalDate.now(), LocalDate.ofYearDay(LocalDate.now().getYear(),1))
+                .period(postService.getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                        .date1(LocalDate.now())
+                        .date2(LocalDate.ofYearDay(LocalDate.now().getYear(),1)).build())
                         .stream()
                         .map(postDTO -> postDTO.getTime()
                                 .toInstant()
@@ -122,7 +157,10 @@ public class StatisticService {
                 .build();
         postStat.getPeriod().stream()
                 .map(month -> postStat.getPostsCountByPeriod().put(month, (long)postService
-                        .getAllPostsByTimeBetween(getFirstDayOfMonth(month), getLastDayOfMonth(month))
+                        .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfMonth(month))
+                                .date2(getLastDayOfMonth(month))
+                                .build())
                         .size()));
         return postStat;
     }
@@ -141,7 +179,10 @@ public class StatisticService {
                 .build();
         postStat.getPeriod().stream()
                 .map(year -> postStat.getPostsCountByPeriod().put(year, (long)postService
-                        .getAllPostsByTimeBetween(getFirstDayOfYear(year),getLastDayOfYear(year))
+                        .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfYear(year))
+                                .date2(getLastDayOfYear(year))
+                                .build())
                         .size()));
         return postStat;
     }
@@ -150,8 +191,10 @@ public class StatisticService {
         PostStatisticDTO postStat = PostStatisticDTO.builder()
                 .generalPostCount((long)postService.getAllPosts().size())
                 .period(postService
-                        .getAllPostsByTimeBetween(
-                                getFirstDayOfMonth(LocalDate.now().getMonth().name()), LocalDate.now())
+                        .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfMonth(LocalDate.now().getMonth().name()))
+                                .date2(LocalDate.now())
+                                .build())
                         .stream()
                         .map(postDTO -> String.valueOf(postDTO.getTime()
                                 .toInstant()
@@ -162,7 +205,10 @@ public class StatisticService {
                 .build();
         postStat.getPeriod().stream()
                 .map(weekNumber -> postStat.getPostsCountByPeriod().put(weekNumber + " week", (long)postService
-                        .getAllPostsByTimeBetween(getFirstDayOfWeek(weekNumber),getLastDayOfWeek(weekNumber))
+                        .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfWeek(weekNumber))
+                                .date2(getLastDayOfWeek(weekNumber))
+                                .build())
                         .size()));
         return postStat;
     }
@@ -172,7 +218,7 @@ public class StatisticService {
         calendar.clear();
         calendar.set(Calendar.WEEK_OF_YEAR,Integer.valueOf(weekNumber));
         calendar.set(Calendar.YEAR, LocalDate.now().getYear());
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        calendar.set(Calendar.DAY_OF_WEEK, 1);
         Date date = calendar.getTime();
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
@@ -182,7 +228,7 @@ public class StatisticService {
         calendar.clear();
         calendar.set(Calendar.WEEK_OF_YEAR,Integer.valueOf(weekNumber));
         calendar.set(Calendar.YEAR, LocalDate.now().getYear());
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+        calendar.set(Calendar.DAY_OF_WEEK, 7);
         Date date = calendar.getTime();
         return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
