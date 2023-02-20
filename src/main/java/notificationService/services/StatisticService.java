@@ -1,12 +1,8 @@
 package notificationService.services;
 
-import dto.userDto.PersonDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import notificationService.dto.Statistic.GeneralStatisticDTO;
-import notificationService.dto.Statistic.PostStatisticDTO;
-import notificationService.dto.Statistic.StatisticRequest;
-import notificationService.dto.Statistic.UserStatisticDTO;
+import notificationService.dto.Statistic.*;
 import notificationService.dto.Statistic.constant.BetweenDataRequest;
 import notificationService.dto.Statistic.constant.ChartRangeType;
 import notificationService.exception.StatisticException;
@@ -62,6 +58,27 @@ public class StatisticService {
                 throw new StatisticException("Error! Unknown chart type!");
         }
     }
+
+    /*private CommentsStatisticDTO getCommentsStatisticByType(ChartRangeType type){
+        switch (type) {
+            case MONTH:
+                return buildCommentsStatsByMonth;
+            case WEEK:
+                return buildCommentsStatsByWeek;
+            case ALL_TIME:
+                return buildCommentsStatsByAllTime();
+            default:
+                throw new StatisticException("Error! Unknown chart type!");
+        }
+    }*/
+
+    /*private CommentsStatisticDTO buildCommentsStatsByAllTime() {
+        return CommentsStatisticDTO.builder()
+                .generalCommentsCount()
+                .period()
+                .commentsCountByPeriod()
+                .build();
+    }*/
 
     private UserStatisticDTO getUserStatisticByType(ChartRangeType type){
         switch (type) {
