@@ -7,7 +7,6 @@ import notificationService.dto.Statistic.PostStatisticDTO;
 import notificationService.dto.Statistic.StatisticRequest;
 import notificationService.dto.Statistic.UserStatisticDTO;
 import notificationService.dto.Statistic.constant.ChartRangeType;
-import org.joda.time.Weeks;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
@@ -35,6 +34,10 @@ public class StatisticService {
         return getPostStatisticByType(request.getType());
     }
 
+    public UserStatisticDTO getUserStatistic(StatisticRequest request){
+        return getUserStatisticByType(request.getType());
+    }
+
     private UserStatisticDTO buildGeneralUserStats(){
         return UserStatisticDTO.builder()
                 .generalUserCount((long)personService.getAllPersonsDTO().size())
@@ -43,7 +46,7 @@ public class StatisticService {
 
     private PostStatisticDTO buildGeneralPostStats(){
         return PostStatisticDTO.builder()
-                .generalPostCount((long)postService.getAllPost().size())
+                .generalPostCount((long)postService.getAllPosts().size())
                 .build();
     }
 
@@ -107,8 +110,8 @@ public class StatisticService {
 
     private PostStatisticDTO buildPostStatsByMonth(){
         PostStatisticDTO postStat = PostStatisticDTO.builder()
-                .generalPostCount((long)postService.getAllPost().size())
-                .period(postService.getAllPostByTimeBetween(LocalDate.now(), LocalDate.ofYearDay(LocalDate.now().getYear(),1))
+                .generalPostCount((long)postService.getAllPosts().size())
+                .period(postService.getAllPostsByTimeBetween(LocalDate.now(), LocalDate.ofYearDay(LocalDate.now().getYear(),1))
                         .stream()
                         .map(postDTO -> postDTO.getTime()
                                 .toInstant()
@@ -119,15 +122,15 @@ public class StatisticService {
                 .build();
         postStat.getPeriod().stream()
                 .map(month -> postStat.getPostsCountByPeriod().put(month, (long)postService
-                        .getAllPostByTimeBetween(getFirstDayOfMonth(month), getLastDayOfMonth(month))
+                        .getAllPostsByTimeBetween(getFirstDayOfMonth(month), getLastDayOfMonth(month))
                         .size()));
         return postStat;
     }
 
     private PostStatisticDTO buildPostStatsByAllTime(){
         PostStatisticDTO postStat = PostStatisticDTO.builder()
-                .generalPostCount((long)postService.getAllPost().size())
-                .period(postService.getAllPost()
+                .generalPostCount((long)postService.getAllPosts().size())
+                .period(postService.getAllPosts()
                         .stream()
                         .map(postDTO -> String.valueOf(postDTO.getTime()
                                 .toInstant()
@@ -138,16 +141,16 @@ public class StatisticService {
                 .build();
         postStat.getPeriod().stream()
                 .map(year -> postStat.getPostsCountByPeriod().put(year, (long)postService
-                        .getAllPostByTimeBetween(getFirstDayOfYear(year),getLastDayOfYear(year))
+                        .getAllPostsByTimeBetween(getFirstDayOfYear(year),getLastDayOfYear(year))
                         .size()));
         return postStat;
     }
 
     private PostStatisticDTO buildPostStatsByWeek(){
         PostStatisticDTO postStat = PostStatisticDTO.builder()
-                .generalPostCount((long)postService.getAllPost().size())
+                .generalPostCount((long)postService.getAllPosts().size())
                 .period(postService
-                        .getAllPostByTimeBetween(
+                        .getAllPostsByTimeBetween(
                                 getFirstDayOfMonth(LocalDate.now().getMonth().name()), LocalDate.now())
                         .stream()
                         .map(postDTO -> String.valueOf(postDTO.getTime()
@@ -159,7 +162,7 @@ public class StatisticService {
                 .build();
         postStat.getPeriod().stream()
                 .map(weekNumber -> postStat.getPostsCountByPeriod().put(weekNumber + " week", (long)postService
-                        .getAllPostByTimeBetween(getFirstDayOfWeek(weekNumber),getLastDayOfWeek(weekNumber))
+                        .getAllPostsByTimeBetween(getFirstDayOfWeek(weekNumber),getLastDayOfWeek(weekNumber))
                         .size()));
         return postStat;
     }

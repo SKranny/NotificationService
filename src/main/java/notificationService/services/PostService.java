@@ -10,9 +10,9 @@ import java.util.List;
 @FeignClient("post-service/api/v1/post")
 public interface PostService {
     @GetMapping("/all")
-    List<PostDTO> getAllPost();
+    List<PostDTO> getAllPosts();
 
-    @GetMapping("/lastMonth")
-    List<PostDTO> getAllPostByTimeBetween(LocalDate date1, LocalDate date2);
+    @GetMapping("/allBetween")
+    List<PostDTO> getAllPostsByTimeBetween(LocalDate date1, LocalDate date2);
 
 }
