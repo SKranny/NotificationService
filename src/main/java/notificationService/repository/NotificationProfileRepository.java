@@ -8,10 +8,13 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface NotificationProfileRepository extends JpaRepository<NotificationProfile, Long> {
     Optional<NotificationProfile> findByUserId(Long userId);
+
+    Set<NotificationProfile> findByUserIdIn(List<Long> idList);
 
     default Integer countNotificationsByUserId(Long userId) {
         return findByUserId(userId)

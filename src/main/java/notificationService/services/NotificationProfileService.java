@@ -20,7 +20,11 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -153,6 +157,19 @@ public class NotificationProfileService {
         return notificationProfileRepository.findByUserId(recipientId)
                 .orElseThrow(() -> new NotificationException("Error! Recipient not found!", HttpStatus.BAD_REQUEST));
     }
+
+    public Set<NotificationProfile> findNotificationProfilesByRecipientIdList(List<Long> recipientIdList) {
+        Map<Long, NotificationProfile> profiles = notificationProfileRepository.findByUserIdIn(recipientIdList).stream()
+                .collect(Collectors.toMap(NotificationProfile::getId, profile -> profile));
+
+        Set<Long> lostNotificationProfiles = recipientIdList.stream().filter(id -> !profiles.containsKey(id))
+                .collect(Collectors.toSet());
+
+        log.info(String.format("Customers with ids [%s] not found", lostNotificationProfiles));
+
+        return new HashSet<>(profiles.values());
+    }
+
 
     public void addNewNotification(Long userId, Notification notification) {
         NotificationProfile profile = findNotificationProfileByRecipientId(userId);

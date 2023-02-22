@@ -1,7 +1,5 @@
 package notificationService.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import constants.NotificationType;
 import dto.notification.ContentDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,13 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateNotificationRequest {
-    private Long authorId;
-
-    private Long recipientId;
-
-    @JsonProperty("notificationType")
-    private NotificationType type;
-
+public class RequestForLogger{
+    private String requestName;
     private ContentDTO content;
 }
