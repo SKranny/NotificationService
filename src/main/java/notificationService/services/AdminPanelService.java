@@ -3,6 +3,7 @@ package notificationService.services;
 import dto.postDto.PostDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,15 +14,15 @@ import java.util.List;
 public class AdminPanelService {
     private final PostService postService;
 
-    public List<PostDTO> getAllPosts(){
-        return postService.getAllPosts();
+    public Page<PostDTO> getAllPosts(String searchedTitle, Integer page){
+        return postService.getAllPosts(searchedTitle,page);
     }
 
-    public List<PostDTO> getActivePosts() {
-        return postService.getAllPostsByIsBlockedIsFalseAndByIsDeletedIsFalse();
+    public Page<PostDTO> getActivePosts(String searchedTitle, Integer page) {
+        return postService.getAllActivePosts(searchedTitle, page);
     }
 
-    public List<PostDTO> getBlockedPosts() {
-        return postService.getAllPostsByIsBlockedIsTrue();
+    public Page<PostDTO> getBlockedPosts(String searchedTitle, Integer page) {
+        return postService.getAllPostsByIsBlockedIsTrue(searchedTitle, page);
     }
 }

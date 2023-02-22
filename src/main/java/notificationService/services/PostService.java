@@ -15,14 +15,14 @@ public interface PostService {
     List<PostDTO> getAllPosts();
 
     @GetMapping("/allPostPage")
-    Page<PostDTO> getAllPosts(@RequestParam String searchedTitle);
+    Page<PostDTO> getAllPosts(@RequestParam String searchedTitle,@RequestParam Integer page);
 
     @GetMapping("/allPostBetween")
     List<PostDTO> getAllPostsByTimeBetween(@RequestParam BetweenDataRequest request);
     
     @GetMapping("/allBlocked")
-    List<PostDTO> getAllPostsByIsBlockedIsTrue();
+    Page<PostDTO> getAllPostsByIsBlockedIsTrue(@RequestParam String searchedTitle,@RequestParam Integer page);
 
     @GetMapping("/getActive")
-    List<PostDTO> getAllPostsByIsBlockedIsFalseAndByIsDeletedIsFalse();
+    Page<PostDTO> getAllActivePosts(@RequestParam String searchedTitle, @RequestParam Integer page);
 }
