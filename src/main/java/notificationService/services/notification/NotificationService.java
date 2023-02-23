@@ -130,7 +130,4 @@ public class NotificationService {
                 .type(request.getType())
                 .build();
     }
-
-    public void updateSentStatus() {
-    }
 }
