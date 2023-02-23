@@ -96,7 +96,6 @@ public class NotificationService {
         notificationRepository.save(buildNotification(req, notificationProfile));
         sendRequest(req);
     }
-
     @SubmitToKafka(topic = "FRIEND_REQUEST")
     public FriendsNotificationRequest sendRequest(FriendsNotificationRequest request) {
         return request;
