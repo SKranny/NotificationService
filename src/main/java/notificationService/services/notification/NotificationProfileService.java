@@ -1,12 +1,12 @@
-package notificationService.services;
+package notificationService.services.notification;
 
 import dto.notification.NotificationDTO;
 import dto.notification.SettingsDTO;
 import dto.userDto.PersonDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import notificationService.dto.SettingsFilter;
-import notificationService.dto.UpdateSettingsRequest;
+import notificationService.dto.notification.SettingsFilter;
+import notificationService.dto.notification.UpdateSettingsRequest;
 import notificationService.entities.Notification;
 import notificationService.entities.NotificationProfile;
 import notificationService.entities.Settings;
@@ -14,16 +14,18 @@ import notificationService.exception.NotificationException;
 import notificationService.mapper.NotificationMapper;
 import notificationService.mapper.SettingsMapper;
 import notificationService.repository.NotificationProfileRepository;
+import notificationService.repository.NotificationRepository;
 import notificationService.repository.settings.SettingsRepository;
+import notificationService.services.person.PersonService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class NotificationProfileService {
+    private final NotificationRepository notificationRepository;
     private final NotificationProfileRepository notificationProfileRepository;
 
     private final SettingsRepository settingsRepository;
@@ -41,9 +44,8 @@ public class NotificationProfileService {
 
     private final PersonService personService;
 
-    public SettingsDTO getSettingsByPersonEmail(String email) {
-        PersonDTO person = personService.getPersonDTOByEmail(email);
-        return settingsMapper.toSettingsDTO(getOrCreateNotificationProfile(person.getId()).getSettings());
+    public SettingsDTO getSettingsByPersonId(Long personId) {
+        return settingsMapper.toSettingsDTO(getOrCreateNotificationProfile(personId).getSettings());
     }
 
     private NotificationProfile getOrCreateNotificationProfile(Long recipientId) {
@@ -54,9 +56,8 @@ public class NotificationProfileService {
                         .build()));
     }
 
-    public SettingsDTO updateSettings(UpdateSettingsRequest request, String email) {
-        PersonDTO person = personService.getPersonDTOByEmail(email);
-        NotificationProfile profile = findNotificationProfileByRecipientId(person.getId());
+    public SettingsDTO updateSettings(UpdateSettingsRequest request, Long personId) {
+        NotificationProfile profile = findNotificationProfileByRecipientId(personId);
         profile.setSettings(getOrBuildSettings(buildSettingsFilter(profile.getSettings(), request)));
         return settingsMapper.toSettingsDTO(notificationProfileRepository.save(profile).getSettings());
     }
@@ -140,17 +141,14 @@ public class NotificationProfileService {
                 .build();
     }
 
-    public List<NotificationDTO> getAllNotificationsByEmail(String email) {
-        PersonDTO personDTO = personService.getPersonDTOByEmail(email);
-        return notificationProfileRepository.findByUserId(personDTO.getId())
-                .map(NotificationProfile::getNotifications)
-                .map(notificationMapper::toListNotificationDTO)
-                .orElseThrow(() -> new NotificationException("Error! Unauthorized!", HttpStatus.UNAUTHORIZED));
-    }
-
-    public Integer getNotificationsCount(String email) {
-        PersonDTO personDTO = personService.getPersonDTOByEmail(email);
-        return notificationProfileRepository.countNotificationsByUserId(personDTO.getId());
+    public Page<NotificationDTO> getAllNotificationsByEmail(Long personId, PageRequest pageRequest) {
+        List<Notification> notifications = notificationRepository.findAllByProfile_UserIdOrderByIsSent(personId, pageRequest)
+                .getContent().stream().peek(n -> n.setIsSent(true)).collect(Collectors.toList());;
+        return new PageImpl<>(
+                notifications.stream().map(notificationMapper::toNotificationDTO)
+                    .collect(Collectors.toList()),
+                pageRequest,
+                notificationRepository.countAllByProfile_UserId(personId));
     }
 
     public NotificationProfile findNotificationProfileByRecipientId(Long recipientId) {
@@ -161,19 +159,13 @@ public class NotificationProfileService {
     public Set<NotificationProfile> findNotificationProfilesByRecipientIdList(List<Long> recipientIdList) {
         Map<Long, NotificationProfile> profiles = notificationProfileRepository.findByUserIdIn(recipientIdList).stream()
                 .collect(Collectors.toMap(NotificationProfile::getId, profile -> profile));
-
         Set<Long> lostNotificationProfiles = recipientIdList.stream().filter(id -> !profiles.containsKey(id))
                 .collect(Collectors.toSet());
-
         log.info(String.format("Customers with ids [%s] not found", lostNotificationProfiles));
-
         return new HashSet<>(profiles.values());
     }
 
-
-    public void addNewNotification(Long userId, Notification notification) {
-        NotificationProfile profile = findNotificationProfileByRecipientId(userId);
-        profile.getNotifications().add(notification);
-        notificationProfileRepository.save(profile);
+    public Long getNotificationsCount(Long personId) {
+        return notificationRepository.countAllByProfile_UserId(personId);
     }
 }

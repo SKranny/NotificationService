@@ -1,6 +1,6 @@
 package notificationService.repository.settings;
 
-import notificationService.dto.SettingsFilter;
+import notificationService.dto.notification.SettingsFilter;
 import notificationService.entities.Settings;
 import notificationService.repository.settings.custom.SettingsSpecifications;
 import org.springframework.data.jpa.domain.Specification;

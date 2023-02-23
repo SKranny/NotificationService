@@ -1,4 +1,4 @@
-package notificationService.dto;
+package notificationService.dto.notification;
 
 import dto.notification.ContentDTO;
 import lombok.AllArgsConstructor;

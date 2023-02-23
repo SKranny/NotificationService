@@ -1,14 +1,14 @@
-package notificationService.services;
+package notificationService.services.notification;
 
 import constants.NotificationType;
 import dto.friendDto.FriendsNotificationRequest;
 import dto.notification.ContentDTO;
-import dto.notification.CreateNotificationRequest;
 import dto.notification.NotificationRequest;
 import dto.postDto.PostNotificationRequest;
+import kafka.annotation.SubmitToKafka;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import notificationService.dto.RequestForLogger;
+import notificationService.dto.notification.RequestForLogger;
 import notificationService.entities.Notification;
 import notificationService.entities.NotificationProfile;
 import notificationService.entities.Settings;
@@ -34,15 +34,6 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
 
     private final ContentMapper contentMapper;
-
-    @KafkaListener(topics = "Notification")
-    public void listenerNewNotifications(CreateNotificationRequest request) {
-        kafkaLogger(RequestForLogger.builder()
-                .requestName("Notification")
-                .content(request.getContent())
-                .build());
-        createNotification(request);
-    }
 
     @KafkaListener(topics = "Friends")
     public void listenerNewNotifications(FriendsNotificationRequest request) {
@@ -95,16 +86,6 @@ public class NotificationService {
         }
     }
 
-    public void createNotification(CreateNotificationRequest req) {
-        NotificationProfile notificationProfile = notificationProfileService.findNotificationProfileByRecipientId(req.getRecipientId());
-
-        if (!getSettingByNotificationType(notificationProfile.getSettings(), req.getType())) {
-            throw new NotificationException(String.format("Error! %s not allowed!", req.getType().name()), HttpStatus.BAD_REQUEST);
-        }
-
-        notificationRepository.save(buildNotification(req, notificationProfile));
-    }
-
     public void createNotification(FriendsNotificationRequest req) {
         NotificationProfile notificationProfile = notificationProfileService.findNotificationProfileByRecipientId(req.getRecipientId());
 
@@ -112,7 +93,18 @@ public class NotificationService {
             throw new NotificationException(String.format("Error! %s not allowed!", req.getType().name()), HttpStatus.BAD_REQUEST);
         }
 
-        notificationRepository.save(buildNotification(req,notificationProfile));
+        notificationRepository.save(buildNotification(req, notificationProfile));
+        sendRequest(req);
+    }
+
+    @SubmitToKafka(topic = "FRIEND_REQUEST")
+    public FriendsNotificationRequest sendRequest(FriendsNotificationRequest request) {
+        return request;
+    }
+
+    @SubmitToKafka(topic = "POST_REQUEST")
+    public PostNotificationRequest sendRequest(PostNotificationRequest request) {
+        return request;
     }
 
     public void createNotification(PostNotificationRequest req) {
@@ -123,6 +115,7 @@ public class NotificationService {
                 .map(profile -> buildNotification(req, profile))
                 .collect(Collectors.toList());
         notificationRepository.saveAll(notifications);
+        sendRequest(req);
     }
 
     private List<NotificationProfile> getSettingsByNotificationTypeFromList(Set<NotificationProfile> profileList, NotificationType type){
@@ -136,5 +129,8 @@ public class NotificationService {
                 .profile(profile)
                 .type(request.getType())
                 .build();
+    }
+
+    public void updateSentStatus() {
     }
 }

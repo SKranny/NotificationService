@@ -1,4 +1,4 @@
-package notificationService.dto;
+package notificationService.dto.notification;
 
 import constants.NotificationType;
 import lombok.Data;

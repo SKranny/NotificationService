@@ -15,11 +15,4 @@ public interface NotificationProfileRepository extends JpaRepository<Notificatio
     Optional<NotificationProfile> findByUserId(Long userId);
 
     Set<NotificationProfile> findByUserIdIn(List<Long> idList);
-
-    default Integer countNotificationsByUserId(Long userId) {
-        return findByUserId(userId)
-                .map(NotificationProfile::getNotifications)
-                .map(List::size)
-                .orElseThrow(() -> new NotificationException("Error! Unknown person!", HttpStatus.UNAUTHORIZED));
-    }
 }

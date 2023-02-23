@@ -1,4 +1,4 @@
-package notificationService.services;
+package notificationService.services.person;
 
 import dto.userDto.PersonDTO;
 import org.springframework.cloud.openfeign.FeignClient;

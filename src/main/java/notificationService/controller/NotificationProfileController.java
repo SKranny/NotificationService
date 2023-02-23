@@ -3,13 +3,15 @@ package notificationService.controller;
 import dto.notification.NotificationDTO;
 import dto.notification.SettingsDTO;
 import lombok.RequiredArgsConstructor;
-import notificationService.dto.UpdateSettingsRequest;
-import notificationService.services.NotificationProfileService;
+import notificationService.dto.notification.UpdateSettingsRequest;
+import notificationService.services.notification.NotificationProfileService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 import security.TokenAuthentication;
 
 import javax.validation.Valid;
-import java.util.List;
+import javax.validation.constraints.Min;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -20,22 +22,25 @@ public class NotificationProfileController {
 
     @GetMapping("/settings")
     public SettingsDTO getSettings(TokenAuthentication authentication) {
-        return notificationProfileService.getSettingsByPersonEmail(authentication.getTokenData().getEmail());
+        return notificationProfileService.getSettingsByPersonId(authentication.getTokenData().getId());
     }
 
     @PutMapping("/settings")
     public SettingsDTO updateSettings(@Valid @RequestBody UpdateSettingsRequest request, TokenAuthentication authentication) {
-        return notificationProfileService.updateSettings(request, authentication.getTokenData().getEmail());
+        return notificationProfileService.updateSettings(request, authentication.getTokenData().getId());
     }
 
     @GetMapping
-    public List<NotificationDTO> getAllNotifications(TokenAuthentication authentication) {
-        return notificationProfileService.getAllNotificationsByEmail(authentication.getTokenData().getEmail());
+    public Page<NotificationDTO> getAllNotifications(
+            @Valid @Min(0) @RequestParam(required = false, defaultValue = "0") Integer page,
+            @Valid @Min(0) @RequestParam(required = false, defaultValue = "20") Integer offset,
+            TokenAuthentication authentication) {
+        return notificationProfileService.getAllNotificationsByEmail(authentication.getTokenData().getId(), PageRequest.of(page, offset));
     }
 
     @GetMapping("/count")
-    public Integer getNotificationsCount(TokenAuthentication authentication) {
-        return notificationProfileService.getNotificationsCount(authentication.getTokenData().getEmail());
+    public Long getNotificationsCount(Long personId) {
+        return notificationProfileService.getNotificationsCount(personId);
     }
 
 }

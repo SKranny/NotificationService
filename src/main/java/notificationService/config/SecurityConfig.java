@@ -13,6 +13,7 @@ public class SecurityConfig {
         return httpSecurity
                 .authorizeHttpRequests(conf -> {
                     conf.antMatchers("/api/v1/notifications/**").authenticated();
+                    conf.antMatchers("/notification").authenticated();
                     conf.antMatchers("/v3/api-docs/**").permitAll();
                     conf.antMatchers("/docs/**").permitAll();
                     conf.anyRequest().authenticated();
