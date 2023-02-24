@@ -17,7 +17,6 @@ import javax.validation.constraints.Min;
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
 public class NotificationProfileController {
-
     private final NotificationProfileService notificationProfileService;
 
     @GetMapping("/settings")
@@ -42,5 +41,4 @@ public class NotificationProfileController {
     public Long getNotificationsCount(Long personId) {
         return notificationProfileService.getNotificationsCount(personId);
     }
-
 }
