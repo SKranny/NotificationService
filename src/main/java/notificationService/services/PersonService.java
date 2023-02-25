@@ -1,6 +1,7 @@
 package notificationService.services;
 
 import dto.userDto.PersonDTO;
+import io.swagger.v3.oas.annotations.Operation;
 import notificationService.dto.Statistic.constant.BetweenDataRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
@@ -18,4 +19,10 @@ public interface PersonService {
 
     @GetMapping("/allBetween")
     List<PersonDTO> getAllPersonsDTOByTimeBetween(@RequestParam BetweenDataRequest request);
+
+    @GetMapping("/active")
+    public List<PersonDTO> getAllActivePersons();
+
+    @GetMapping("/blocked")
+    public List<PersonDTO> getAllBlockedPersons();
 }
