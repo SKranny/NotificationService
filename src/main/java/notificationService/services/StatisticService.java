@@ -1,5 +1,6 @@
 package notificationService.services;
 
+import dto.postDto.PostDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import notificationService.dto.Statistic.*;
@@ -23,6 +24,8 @@ public class StatisticService {
         return GeneralStatisticDTO.builder()
                 .userStatistic(buildGeneralUserStats())
                 .postStatistic(buildGeneralPostStats())
+                .commentStatistic(buildGeneralCommentStats())
+                .likeStatistic(buildGeneralLikeStats())
                 .build();
     }
 
@@ -32,6 +35,26 @@ public class StatisticService {
 
     public UserStatisticDTO getUserStatistic(StatisticRequest request){
         return getUserStatisticByType(request.getType());
+    }
+
+    public CommentsStatisticDTO getCommentsStatistic(StatisticRequest request){
+        return getCommentStatisticByType(request.getType());
+    }
+
+    public LikesStatisticDTO getLikesStatistic(StatisticRequest request) {
+        return getLikesStatisticByType(request.getType());
+    }
+
+    private CommentsStatisticDTO buildGeneralCommentStats(){
+        return CommentsStatisticDTO.builder()
+                .generalCommentsCount(postService.getAllPosts().stream().map(PostDTO::getCommentAmount).count())
+                .build();
+    }
+
+    private LikesStatisticDTO buildGeneralLikeStats() {
+        return LikesStatisticDTO.builder()
+                .generalLikesCount(postService.getAllPosts().stream().map(PostDTO::getLikeAmount).count())
+                .build();
     }
 
     private UserStatisticDTO buildGeneralUserStats(){
@@ -59,27 +82,6 @@ public class StatisticService {
         }
     }
 
-    /*private CommentsStatisticDTO getCommentsStatisticByType(ChartRangeType type){
-        switch (type) {
-            case MONTH:
-                return buildCommentsStatsByMonth;
-            case WEEK:
-                return buildCommentsStatsByWeek;
-            case ALL_TIME:
-                return buildCommentsStatsByAllTime();
-            default:
-                throw new StatisticException("Error! Unknown chart type!");
-        }
-    }*/
-
-    /*private CommentsStatisticDTO buildCommentsStatsByAllTime() {
-        return CommentsStatisticDTO.builder()
-                .generalCommentsCount()
-                .period()
-                .commentsCountByPeriod()
-                .build();
-    }*/
-
     private UserStatisticDTO getUserStatisticByType(ChartRangeType type){
         switch (type) {
             case MONTH:
@@ -91,6 +93,178 @@ public class StatisticService {
             default:
                 throw new StatisticException("Error! Unknown chart type!");
         }
+    }
+
+    private CommentsStatisticDTO getCommentStatisticByType(ChartRangeType type){
+        switch (type) {
+            case MONTH:
+                return buildCommentStatsByMonth();
+            case WEEK:
+                return buildCommentStatsByWeek();
+            case ALL_TIME:
+                return buildCommentStatsByAllTime();
+            default:
+                throw new StatisticException("Error! Unknown chart type!");
+        }
+    }
+
+    private LikesStatisticDTO getLikesStatisticByType(ChartRangeType type) {
+        switch (type) {
+            case MONTH:
+                return buildLikeStatsByMonth();
+            case WEEK:
+                return buildLikeStatsByWeek();
+            case ALL_TIME:
+                return buildLikeStatsByAllTime();
+            default:
+                throw new StatisticException("Error! Unknown chart type!");
+        }
+    }
+
+    private LikesStatisticDTO buildLikeStatsByMonth() {
+        LikesStatisticDTO likesStat = LikesStatisticDTO.builder()
+                .generalLikesCount(postService.getAllPosts().stream().map(PostDTO::getLikeAmount).count())
+                .period(postService.getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                                .date1(LocalDate.now())
+                                .date2(LocalDate.ofYearDay(LocalDate.now().getYear(),1)).build())
+                        .stream()
+                        .map(postDTO -> postDTO.getTime()
+                                .toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate().getMonth().name())
+                        .collect(Collectors.toSet()))
+                .likesCountByPeriod(new HashMap<>())
+                .build();
+        likesStat.getPeriod().stream().map(month -> likesStat.getLikesCountByPeriod().put(month, postService
+                .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                        .date1(getFirstDayOfMonth(month))
+                        .date2(getLastDayOfMonth(month))
+                        .build()).stream()
+                .map(PostDTO::getLikeAmount)
+                .count()));
+        return likesStat;
+    }
+
+    private LikesStatisticDTO buildLikeStatsByWeek() {
+        LikesStatisticDTO likesStat = LikesStatisticDTO.builder()
+                .generalLikesCount(postService.getAllPosts().stream().map(PostDTO::getLikeAmount).count())
+                .period(postService.getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfMonth(LocalDate.now().getMonth().name()))
+                                .date2(LocalDate.now())
+                                .build())
+                        .stream()
+                        .map(postDTO -> String.valueOf(postDTO.getTime()
+                                .toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate().get(WeekFields.of(Locale.getDefault()).weekOfYear())))
+                        .collect(Collectors.toSet()))
+                .likesCountByPeriod(new HashMap<>())
+                .build();
+        likesStat.getPeriod().stream().map(weekNumber -> likesStat.getLikesCountByPeriod().put(weekNumber + " week", postService
+                .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                        .date1(getFirstDayOfWeek(weekNumber))
+                        .date2(getLastDayOfWeek(weekNumber))
+                        .build()).stream()
+                .map(PostDTO::getLikeAmount)
+                .count()));
+        return likesStat;
+    }
+
+    private LikesStatisticDTO buildLikeStatsByAllTime() {
+        LikesStatisticDTO likesStat = LikesStatisticDTO.builder()
+                .generalLikesCount(postService.getAllPosts().stream().map(PostDTO::getLikeAmount).count())
+                .period(postService.getAllPosts()
+                        .stream()
+                        .map(postDTO -> String.valueOf(postDTO.getTime()
+                                .toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate().getYear()))
+                        .collect(Collectors.toSet()))
+                .likesCountByPeriod(new HashMap<>())
+                .build();
+        likesStat.getPeriod().stream()
+                .map(year -> likesStat.getLikesCountByPeriod().put(year, postService
+                        .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfYear(year))
+                                .date2(getLastDayOfYear(year))
+                                .build())
+                        .stream()
+                        .map(PostDTO::getLikeAmount)
+                        .count()));
+        return likesStat;
+    }
+    private CommentsStatisticDTO buildCommentStatsByMonth() {
+        CommentsStatisticDTO commentsStat = CommentsStatisticDTO.builder()
+                .generalCommentsCount(postService.getAllPosts().stream().map(PostDTO::getCommentAmount).count())
+                .period(postService.getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                        .date1(LocalDate.now())
+                        .date2(LocalDate.ofYearDay(LocalDate.now().getYear(),1)).build())
+                        .stream()
+                        .map(postDTO -> postDTO.getTime()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate().getMonth().name())
+                        .collect(Collectors.toSet()))
+                .commentsCountByPeriod(new HashMap<>())
+                .build();
+        commentsStat.getPeriod().stream().map(month -> commentsStat.getCommentsCountByPeriod().put(month, postService
+                .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                .date1(getFirstDayOfMonth(month))
+                .date2(getLastDayOfMonth(month))
+                .build()).stream()
+                .map(PostDTO::getCommentAmount)
+                .count()));
+        return commentsStat;
+    }
+
+    private CommentsStatisticDTO buildCommentStatsByWeek() {
+        CommentsStatisticDTO commentStat = CommentsStatisticDTO.builder()
+                .generalCommentsCount(postService.getAllPosts().stream().map(PostDTO::getCommentAmount).count())
+                .period(postService.getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                                .date1(getFirstDayOfMonth(LocalDate.now().getMonth().name()))
+                                .date2(LocalDate.now())
+                                .build())
+                        .stream()
+                        .map(postDTO -> String.valueOf(postDTO.getTime()
+                                .toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate().get(WeekFields.of(Locale.getDefault()).weekOfYear())))
+                        .collect(Collectors.toSet()))
+                .commentsCountByPeriod(new HashMap<>())
+                .build();
+        commentStat.getPeriod().stream()
+                .map(weekNumber -> commentStat.getCommentsCountByPeriod().put(weekNumber + " week", postService
+                .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                        .date1(getFirstDayOfWeek(weekNumber))
+                        .date2(getLastDayOfWeek(weekNumber))
+                        .build()).stream()
+                        .map(PostDTO::getCommentAmount)
+                        .count()));
+        return commentStat;
+    }
+
+    private CommentsStatisticDTO buildCommentStatsByAllTime() {
+        CommentsStatisticDTO commentStat = CommentsStatisticDTO.builder()
+                .generalCommentsCount(postService.getAllPosts().stream().map(PostDTO::getCommentAmount).count())
+                .period(postService.getAllPosts()
+                        .stream()
+                        .map(postDTO -> String.valueOf(postDTO.getTime()
+                                .toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate().getYear()))
+                        .collect(Collectors.toSet()))
+                .commentsCountByPeriod(new HashMap<>())
+                .build();
+        commentStat.getPeriod().stream()
+                .map(year -> commentStat.getCommentsCountByPeriod().put(year, postService
+                .getAllPostsByTimeBetween(BetweenDataRequest.builder()
+                        .date1(getFirstDayOfYear(year))
+                        .date2(getLastDayOfYear(year))
+                        .build())
+                .stream()
+                .map(PostDTO::getCommentAmount)
+                .count()));
+        return commentStat;
     }
 
     private UserStatisticDTO buildUserStatsByWeek() {
