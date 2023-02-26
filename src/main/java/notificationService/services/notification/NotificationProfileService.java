@@ -16,7 +16,7 @@ import notificationService.mapper.SettingsMapper;
 import notificationService.repository.NotificationProfileRepository;
 import notificationService.repository.NotificationRepository;
 import notificationService.repository.settings.SettingsRepository;
-import notificationService.services.person.PersonService;
+import notificationService.services.PersonService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
