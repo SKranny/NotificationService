@@ -1,5 +1,5 @@
 # Java Spring project "Social networking site"
-### Notification-service
+#### Notification-service
 
 ## Description
 This service is responsible for a variety of notifications such as:
